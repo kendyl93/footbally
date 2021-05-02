@@ -4,6 +4,19 @@ import { FlatList, Platform, SafeAreaView, StyleSheet, Text, View } from 'react-
 import { API_TOKEN } from "react-native-dotenv";
 import useInterval from './useInterval'
 
+enum COMPETITIONS_ID {
+  BRASIL_SERIE_A = 2013,
+  CHAMPIONSHIP = 2016,
+  PREMIER_LEAGUE = 2021,
+  UCL = 2001,
+  EL = 2018,
+  ITALY_SERIE_A = 2019,
+  EREDEVISIE = 2003,
+  PRIMERA_LIGA =2017,
+  PRIMERA_DEVISION = 2014,
+  FIFA_WC = 2000
+}
+
 interface ICompetitions {
   id: number;
   name: string;
