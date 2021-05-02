@@ -1,40 +1,61 @@
 import React, { useEffect, useState } from 'react';
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import { StatusBar, setStatusBarTranslucent } from 'expo-status-bar';
+import { FlatList, Platform, SafeAreaView, StyleSheet, Text, View } from 'react-native';
 import { API_TOKEN } from "react-native-dotenv";
 import useInterval from './useInterval'
 
+interface ICompetitions {
+  id: number;
+  name: string;
+}
+
+
+const fromSeconds = (seconds: number): number => 1000 * seconds;
+
+const renderItem = ({ item }) => (
+  <Text key={item.id}>{item?.name}</Text>
+);
 
 
 export default function App() {
   // The counter
-  const [apiData, setApiData] = useState<any[]>(0)
+  const [competitions, setcompetitions] = useState<ICompetitions[]>([])
 
-  useInterval(
-    () => {
-      // Your custom logic here
-    fetch('http://api.football-data.org/v2/competitions/2021/matches?matchday=1', { headers:{'X-Auth-Token': API_TOKEN}})
-      .then((response) => response.json())
-      .then((json) =>setApiData(json))
-      .catch((error) => console.error(error))
-      .finally(() => console.log({apiData}))
+  useEffect(    () => {
+    setStatusBarTranslucent(false)
+    // Your custom logic here
+  fetch('http://api.football-data.org/v2/competitions?plan=TIER_ONE', { headers:{'X-Auth-Token': API_TOKEN}})
+    .then((response) => response.json())
+    .then((json) =>setcompetitions(json.competitions))
+    .catch((error) => console.error(error))
+    .finally(() => console.log({fromUseEffect: competitions}))
 
-    },
-    // Delay in milliseconds or null to stop it
-    1000 * 60,
-  )
-  // useEffect(() => {
-  //   fetch('http://api.football-data.org/v2/competitions/2021/matches?matchday=1', { headers:{'X-Auth-Token': API_TOKEN}})
+  },[])
+
+  // useInterval(
+  //   () => {
+  //     // Your custom logic here
+  //   fetch('http://api.football-data.org/v2/competitions/2021/matches?matchday=34', { headers:{'X-Auth-Token': API_TOKEN}})
   //     .then((response) => response.json())
-  //     .then((json) => console.log({DATA: json}))
+  //     .then((json) =>setcompetitions(json))
   //     .catch((error) => console.error(error))
-  // }, []);
+  //     .finally(() => console.log({fromInterval: apiData}))
+
+  //   },
+  //   // Delay in milliseconds or null to stop it
+  //   fromSeconds(60),
+  // )
   
   return (
-    <View style={styles.container}>
-      <Text style={styles.text}>Open up App.tsx to start working on your app!!!!!!!!</Text>
+    <SafeAreaView style={styles.container}>
+      <Text style={styles.text}>Competitions</Text>
+      {competitions.length > 0 && <FlatList
+        data={competitions}
+        renderItem={renderItem}
+        keyExtractor={item => item?.id}
+      />}
       <StatusBar style="auto" />
-    </View>
+    </SafeAreaView >
   );
 }
 
@@ -43,7 +64,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'center'
   },
   text:{
     borderStyle: "solid",
