@@ -3,18 +3,20 @@ import { StatusBar, setStatusBarTranslucent } from 'expo-status-bar';
 import { FlatList, Platform, SafeAreaView, StyleSheet, Text, View } from 'react-native';
 import { API_TOKEN } from "react-native-dotenv";
 import useInterval from './useInterval'
+import _ from 'lodash';
 
-enum COMPETITIONS_ID {
-  BRASIL_SERIE_A = 2013,
-  CHAMPIONSHIP = 2016,
-  PREMIER_LEAGUE = 2021,
-  UCL = 2001,
-  EL = 2018,
-  ITALY_SERIE_A = 2019,
-  EREDEVISIE = 2003,
-  PRIMERA_LIGA =2017,
-  PRIMERA_DEVISION = 2014,
-  FIFA_WC = 2000
+const COMPETITIONS_ID: {
+  BRASIL_SERIE_A: {id: 2013,name: "Série A"},
+  CHAMPIONSHIP: {id: 2016,name: "Championship", ensignUrl: "https://upload.wikimedia.org/wikipedia/en/a/ae/Flag_of_the_United_Kingdom.svg",},
+  PREMIER_LEAGUE: {id: 2021, name: "Premier League", ensignUrl: "https://upload.wikimedia.org/wikipedia/en/a/ae/Flag_of_the_United_Kingdom.svg"},
+  UCL: {id:2001, name: "UEFA Champions League"},
+  EL: {id: 2018, name: "European Championship", },
+  ITALY_SERIE_A: {id: 2019, name: "Serie A", ensignUrl: "https://upload.wikimedia.org/wikipedia/en/0/03/Flag_of_Italy.svg"},
+  EREDEVISIE: {id: 2003, name: "Eredivisie", ensignUrl: "https://upload.wikimedia.org/wikipedia/commons/2/20/Flag_of_the_Netherlands.svg"},
+  PRIMERA_LIGA:{id: 2017, name: "Primeira Liga",ensignUrl: "https://upload.wikimedia.org/wikipedia/commons/5/5c/Flag_of_Portugal.svg"},
+  BUNDESLIGA: {id: 2002, name:"Bundesliga", ensignUrl: "https://upload.wikimedia.org/wikipedia/commons/b/ba/Flag_of_Germany.svg"}
+  PRIMERA_DEVISION: {id: 2014,name:"Primera Division", ensignUrl: "https://upload.wikimedia.org/wikipedia/en/9/9a/Flag_of_Spain.svg"},
+  FIFA_WC: {id: 2000, name: "FIFA World Cup"}
 }
 
 interface ICompetitions {
@@ -25,9 +27,23 @@ interface ICompetitions {
 
 const fromSeconds = (seconds: number): number => 1000 * seconds;
 
-const renderItem = ({ item }) => (
-  <Text key={item.id}>{item?.name}</Text>
+const renderMatch = ({ item }) => (
+  <Text key={item.id}>{item?.homeTeam.name} - {item?.awayTeam.name}</Text>
 );
+
+const renderItem = ({ item }) => {
+  console.log({item})
+  return (
+  <>
+   <Text style={styles.text}key={`${item[0]}-title`}>{item[0]}</Text>
+  <FlatList
+        data={item[1]}
+        renderItem={renderMatch}
+        keyExtractor={item => `${item?.homeTeam.name}-${item?.awayTeam.name}`}
+      />
+      
+</>
+)};
 
 
 export default function App() {
@@ -37,13 +53,14 @@ export default function App() {
   useEffect(    () => {
     setStatusBarTranslucent(false)
     // Your custom logic here
-  fetch('http://api.football-data.org/v2/competitions?plan=TIER_ONE', { headers:{'X-Auth-Token': API_TOKEN}})
+  fetch('http://api.football-data.org/v2/matches?plan=TIER_ONE', { headers:{'X-Auth-Token': API_TOKEN}})
     .then((response) => response.json())
-    .then((json) =>setcompetitions(json.competitions))
+    .then((json) =>setcompetitions(_.groupBy(json.matches, m=>m?.competition?.name)))
     .catch((error) => console.error(error))
-    .finally(() => console.log({fromUseEffect: competitions}))
+    .finally(() => console.log({competitions}))
 
   },[])
+
 
   // useInterval(
   //   () => {
@@ -62,10 +79,10 @@ export default function App() {
   return (
     <SafeAreaView style={styles.container}>
       <Text style={styles.text}>Competitions</Text>
-      {competitions.length > 0 && <FlatList
-        data={competitions}
+      {<FlatList
+        data={Object.entries(competitions)}
         renderItem={renderItem}
-        keyExtractor={item => item?.id}
+        keyExtractor={item => item[0].toString()}
       />}
       <StatusBar style="auto" />
     </SafeAreaView >
